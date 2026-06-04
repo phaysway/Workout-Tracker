@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="GluteRun">
+<meta name="theme-color" content="#c4622d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Glute & Run Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f5f0e8;
+    --sand: #e8dfc8;
+    --dark: #1a1612;
+    --brown: #3d2b1f;
+    --terra: #c4622d;
+    --terra-light: #e8845a;
+    --green: #3a6b4a;
+    --green-light: #5a9b6a;
+    --blue: #2d4a7a;
+    --blue-light: #4a72b0;
+    --gold: #c9923a;
+    --muted: #8a7968;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--dark);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    padding: env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 48px);
+    padding-top: max(env(safe-area-inset-top), 24px);
+    background-image: 
+      radial-gradient(ellipse at 10% 20%, rgba(196,98,45,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(58,107,74,0.06) 0%, transparent 50%);
+  }
+
+  /* Install banner */
+  #installBanner {
+    display: none;
+    background: var(--terra);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+  #installBanner p { font-size: 13px; line-height: 1.5; margin-bottom: 8px; }
+  #installBanner strong { font-size: 14px; }
+  #installBanner .banner-steps { font-size: 12px; opacity: 0.9; margin-bottom: 8px; }
+  #installBanner button {
+    background: white;
+    color: var(--terra);
+    border: none;
+    border-radius: 100px;
+    padding: 7px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  #dismissBanner {
+    background: transparent !important;
+    color: white !important;
+    opacity: 0.7;
+    margin-left: 8px;
+    padding: 7px 12px !important;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 0;
+  }
+
+  .week-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(26px, 6vw, 40px);
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--brown);
+  }
+
+  h1 span { color: var(--terra); }
+
+  .week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .week-btn {
+    background: var(--sand);
+    border: 1.5px solid rgba(61,43,31,0.15);
+    color: var(--brown);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .week-btn:active { background: var(--terra); color: white; border-color: var(--terra); }
+
+  .week-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--brown);
+    font-weight: 500;
+    min-width: 120px;
+    text-align: center;
+  }
+
+  .progress-bar-wrap {
+    background: var(--sand);
+    border: 1.5px solid rgba(61,43,31,0.12);
+    border-radius: 100px;
+    height: 8px;
+    margin: 16px auto 0;
+    max-width: 300px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--terra), var(--gold));
+    transition: width 0.5s ease;
+  }
+  .progress-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 6px;
+    letter-spacing: 0.1em;
+  }
+
+  .days-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .day-card {
+    background: white;
+    border-radius: 16px;
+    border: 1.5px solid rgba(61,43,31,0.08);
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(61,43,31,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .day-card.completed { border-color: rgba(58,107,74,0.3); background: #f8fdf9; }
+  .day-card.rest-day { background: var(--cream); border-style: dashed; }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .day-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    color: white;
+  }
+
+  .day-info { flex: 1; min-width: 0; }
+
+  .day-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .day-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brown);
+    line-height: 1.2;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .day-tags {
+    display: flex;
+    gap: 5px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 100px;
+    font-weight: 500;
+  }
+
+  .tag-run { background: rgba(45,74,122,0.12); color: var(--blue); }
+  .tag-lift { background: rgba(196,98,45,0.12); color: var(--terra); }
+  .tag-core { background: rgba(201,146,58,0.12); color: var(--gold); }
+  .tag-rest { background: rgba(138,121,104,0.12); color: var(--muted); }
+  .tag-pilates { background: rgba(58,107,74,0.12); color: var(--green); }
+
+  .check-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--sand);
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .check-btn.done { background: var(--green); border-color: var(--green); color: white; }
+
+  .day-body {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 1px solid rgba(61,43,31,0.06);
+  }
+  .day-body.open { display: block; }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 14px 0 8px;
+  }
+
+  .exercise-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .exercise-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    background: var(--cream);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .exercise-item.ex-done { background: rgba(58,107,74,0.08); }
+
+  .ex-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 1.5px solid rgba(61,43,31,0.2);
+    background: white;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    transition: all 0.15s;
+  }
+  .exercise-item.ex-done .ex-check { background: var(--green); border-color: var(--green); color: white; }
+
+  .ex-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--brown);
+    flex: 1;
+  }
+  .exercise-item.ex-done .ex-name { text-decoration: line-through; color: var(--muted); }
+
+  .ex-sets {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .run-note {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border-left: 3px solid var(--blue);
+    background: rgba(45,74,122,0.05);
+    font-size: 12px;
+    color: var(--blue);
+    font-weight: 500;
+    line-height: 1.6;
+  }
+
+  .notes-area { margin-top: 12px; }
+  .notes-area textarea {
+    width: 100%;
+    background: var(--cream);
+    border: 1.5px solid rgba(61,43,31,0.1);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--brown);
+    resize: none;
+    min-height: 70px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .notes-area textarea:focus { border-color: var(--terra); }
+  .notes-area textarea::placeholder { color: var(--muted); }
+
+  .dot-mon { background: linear-gradient(135deg, #2d4a7a, #4a72b0); }
+  .dot-tue { background: linear-gradient(135deg, #c4622d, #e8845a); }
+  .dot-wed { background: linear-gradient(135deg, #2d4a7a, #c4622d); }
+  .dot-thu { background: linear-gradient(135deg, #3a6b4a, #5a9b6a); }
+  .dot-fri { background: linear-gradient(135deg, #2d4a7a, #4a72b0); }
+  .dot-sat { background: linear-gradient(135deg, #c9923a, #e0b060); }
+  .dot-sun { background: linear-gradient(135deg, #8a7968, #b0a090); }
+
+  .expand-icon {
+    font-size: 11px;
+    color: var(--muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .expand-icon.open { transform: rotate(180deg); }
+
+  .week-summary {
+    max-width: 600px;
+    margin: 16px auto 0;
+    background: white;
+    border-radius: 16px;
+    border: 1.5px solid rgba(61,43,31,0.08);
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    justify-content: space-around;
+    box-shadow: 0 2px 12px rgba(61,43,31,0.06);
+  }
+  .stat-box { text-align: center; }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px;
+    font-weight: 900;
+    color: var(--terra);
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* Offline indicator */
+  #offlineToast {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--brown);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    z-index: 1000;
+  }
+</style>
+</head>
+<body>
+
+<div id="installBanner">
+  <strong>📱 Add to your Home Screen!</strong>
+  <div class="banner-steps" style="margin-top:6px">
+    Tap the <strong>Share</strong> button (box with arrow) → <strong>"Add to Home Screen"</strong> → <strong>Add</strong>
+  </div>
+  <div>
+    <button onclick="document.getElementById('installBanner').style.display='none'">Got it!</button>
+    <button id="dismissBanner" onclick="dismissBanner()">Not now</button>
+  </div>
+</div>
+
+<header>
+  <div class="week-label">8-Week 10K + Glute Program</div>
+  <h1>Weekly <span>Tracker</span></h1>
+  <div class="week-nav">
+    <button class="week-btn" onclick="changeWeek(-1)">←</button>
+    <div class="week-display" id="weekDisplay">Week 1</div>
+    <button class="week-btn" onclick="changeWeek(1)">→</button>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressBar" style="width:12.5%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">Week 1 of 8</div>
+</header>
+
+<div class="days-grid" id="daysGrid"></div>
+
+<div class="week-summary">
+  <div class="stat-box">
+    <div class="stat-num" id="statDays">0</div>
+    <div class="stat-label">Days Done</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num" id="statExercises">0</div>
+    <div class="stat-label">Exercises</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num" id="statRuns">0</div>
+    <div class="stat-label">Runs Done</div>
+  </div>
+</div>
+
+<div id="offlineToast">📵 You're offline — data still saves!</div>
+
+<script>
+const DAYS_DATA = [
+  {
+    id: 'mon', day: 'Monday', title: 'Threshold Run',
+    dotClass: 'dot-mon',
+    tags: ['run', 'zone 3–4'], tagClasses: ['tag-run', 'tag-run'],
+    isRest: false, isRun: true,
+    runNote: '🏃‍♀️ Comfortably hard effort — only a few words at a time. Add 2–3 min each week.',
+    exercises: [],
+    weeklyTarget: ['20 min','22 min','25 min','27 min','30 min','30 min','28 min','20 min (taper)'],
+  },
+  {
+    id: 'tue', day: 'Tuesday', title: 'Leg Day A',
+    dotClass: 'dot-tue',
+    tags: ['lift', 'glute strength'], tagClasses: ['tag-lift', 'tag-lift'],
+    isRest: false, isRun: false,
+    exercises: [
+      { name: 'Hip Thrust', sets: '4 × 6–8' },
+      { name: 'Romanian Deadlift', sets: '3 × 8–10' },
+      { name: 'Step-Ups (weighted)', sets: '3 × 8 each leg' },
+      { name: 'Back Extensions', sets: '2–3 × 12–15' },
+      { name: 'Hip Abduction Machine', sets: '2–3 × 15–20' },
+    ]
+  },
+  {
+    id: 'wed', day: 'Wednesday', title: 'Intervals + Push',
+    dotClass: 'dot-wed',
+    tags: ['run', 'lift', 'intervals'], tagClasses: ['tag-run', 'tag-lift', 'tag-run'],
+    isRest: false, isRun: true, dual: true,
+    runNote: '⚡ Warm up 5 min easy → intervals with 90 sec rest between → cool down 5 min.',
+    exercises: [
+      { name: 'Bench Press', sets: '4 × 6–8' },
+      { name: 'Seated Shoulder Press', sets: '3 × 8–10' },
+      { name: 'Lateral Raises', sets: '3 × 12–15' },
+      { name: 'Chest Press Machine', sets: '3 × 10–12' },
+      { name: 'Overhead Tricep Extension', sets: '3 × 10–12' },
+      { name: 'Rope Pushdowns', sets: '3 × 12–15' },
+    ],
+    weeklyTarget: ['6 × 400m','6 × 400m','8 × 400m','8 × 400m','4 × 800m','4 × 800m','3 × 1K','Easy run only 🎉'],
+  },
+  {
+    id: 'thu', day: 'Thursday', title: 'Pilates',
+    dotClass: 'dot-thu',
+    tags: ['pilates', 'core'], tagClasses: ['tag-pilates', 'tag-core'],
+    isRest: false, isRun: false,
+    exercises: [
+      { name: 'Full Pilates session', sets: '45–60 min' },
+      { name: 'Core + glute activation focus', sets: '' },
+      { name: 'Hip flexor & hamstring stretches', sets: '' },
+    ]
+  },
+  {
+    id: 'fri', day: 'Friday', title: 'Long Run (Zone 2)',
+    dotClass: 'dot-fri',
+    tags: ['run', 'zone 2', 'long run'], tagClasses: ['tag-run', 'tag-run', 'tag-run'],
+    isRest: false, isRun: true,
+    runNote: '🫁 Full conversation pace. If you can\'t chat, slow down. This is your fat-burning & base-building run.',
+    exercises: [],
+    weeklyTarget: ['6 km','6 km','7 km','7.5 km','8.5 km','9 km','9.5 km','10 km 🏁'],
+  },
+  {
+    id: 'sat', day: 'Saturday', title: 'Leg Day B',
+    dotClass: 'dot-sat',
+    tags: ['lift', 'glute hypertrophy'], tagClasses: ['tag-lift', 'tag-lift'],
+    isRest: false, isRun: false,
+    exercises: [
+      { name: 'Smith Squat / Leg Press', sets: '4 × 8–10' },
+      { name: 'Bulgarian Split Squat', sets: '3 × 8 each leg' },
+      { name: 'KAS Glute Bridge', sets: '4 × 12–15' },
+      { name: 'Adductor Machine', sets: '3 × 12–15' },
+      { name: 'Cable Kickbacks', sets: '3 × 15–20' },
+      { name: 'Seated Leg Curl', sets: '3 × 12–15' },
+    ]
+  },
+  {
+    id: 'sun', day: 'Sunday', title: 'Rest & Recovery',
+    dotClass: 'dot-sun',
+    tags: ['rest'], tagClasses: ['tag-rest'],
+    isRest: true, isRun: false,
+    exercises: [
+      { name: '8–10K steps (walking)', sets: '' },
+      { name: 'Stretching / mobility', sets: '10–15 min' },
+      { name: 'Hydration & nutrition focus', sets: '' },
+    ]
+  },
+];
+
+let currentWeek = 1;
+let state = {};
+
+function getState(week, dayId) {
+  if (!state[week]) state[week] = {};
+  if (!state[week][dayId]) state[week][dayId] = { done: false, exercises: {}, notes: '' };
+  return state[week][dayId];
+}
+
+function saveState() {
+  try { localStorage.setItem('gluteRunTracker_v2', JSON.stringify({ state, currentWeek })); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('gluteRunTracker_v2');
+    if (saved) { const p = JSON.parse(saved); state = p.state || {}; currentWeek = p.currentWeek || 1; }
+  } catch(e) {}
+}
+
+function changeWeek(dir) {
+  currentWeek = Math.max(1, Math.min(8, currentWeek + dir));
+  document.getElementById('weekDisplay').textContent = `Week ${currentWeek}`;
+  document.getElementById('progressBar').style.width = `${(currentWeek/8)*100}%`;
+  document.getElementById('progressLabel').textContent = `Week ${currentWeek} of 8`;
+  renderDays();
+  saveState();
+}
+
+function toggleDay(dayId) {
+  const body = document.getElementById(`body-${dayId}`);
+  const icon = document.getElementById(`icon-${dayId}`);
+  body.classList.toggle('open');
+  icon.classList.toggle('open');
+}
+
+function toggleDayDone(dayId) {
+  const s = getState(currentWeek, dayId);
+  s.done = !s.done;
+  saveState();
+  renderDays();
+  updateStats();
+}
+
+function toggleExercise(dayId, exIdx) {
+  const s = getState(currentWeek, dayId);
+  s.exercises[exIdx] = !s.exercises[exIdx];
+  saveState();
+  const item = document.getElementById(`ex-${dayId}-${exIdx}`);
+  if (item) {
+    item.classList.toggle('ex-done', s.exercises[exIdx]);
+    item.querySelector('.ex-check').textContent = s.exercises[exIdx] ? '✓' : '';
+    item.querySelector('.ex-name').style.textDecoration = s.exercises[exIdx] ? 'line-through' : '';
+  }
+  updateStats();
+}
+
+function saveNotes(dayId, val) {
+  getState(currentWeek, dayId).notes = val;
+  saveState();
+}
+
+function updateStats() {
+  let days=0, exs=0, runs=0;
+  DAYS_DATA.forEach(d => {
+    const s = getState(currentWeek, d.id);
+    if (s.done) { days++; if (d.isRun) runs++; }
+    Object.values(s.exercises).forEach(v => { if(v) exs++; });
+  });
+  document.getElementById('statDays').textContent = days;
+  document.getElementById('statExercises').textContent = exs;
+  document.getElementById('statRuns').textContent = runs;
+}
+
+function renderDays() {
+  const grid = document.getElementById('daysGrid');
+  grid.innerHTML = '';
+  // Track open states before re-render
+  const openDays = {};
+  DAYS_DATA.forEach(d => {
+    const el = document.getElementById(`body-${d.id}`);
+    if (el) openDays[d.id] = el.classList.contains('open');
+  });
+
+  DAYS_DATA.forEach(day => {
+    const s = getState(currentWeek, day.id);
+    const card = document.createElement('div');
+    card.className = `day-card${s.done?' completed':''}${day.isRest?' rest-day':''}`;
+
+    const target = day.weeklyTarget ? day.weeklyTarget[currentWeek-1] : null;
+    const tagsHTML = day.tags.map((t,i) => `<span class="tag ${day.tagClasses[i]||'tag-rest'}">${t}</span>`).join('');
+
+    let exHTML = '';
+    if (day.exercises && day.exercises.length) {
+      const label = day.dual ? '💪 Push Day Lifts' : day.isRest ? 'Recovery Activities' : 'Exercises';
+      const items = day.exercises.map((ex,i) => {
+        const done = s.exercises[i];
+        return `<li class="exercise-item${done?' ex-done':''}" id="ex-${day.id}-${i}" onclick="toggleExercise('${day.id}',${i})">
+          <div class="ex-check">${done?'✓':''}</div>
+          <div class="ex-name">${ex.name}</div>
+          ${ex.sets?`<div class="ex-sets">${ex.sets}</div>`:''}
+        </li>`;
+      }).join('');
+      exHTML = `<div class="section-label">${label}</div><ul class="exercise-list">${items}</ul>`;
+    }
+
+    let runHTML = '';
+    if (day.isRun || day.dual) {
+      const sectionLabel = day.dual ? '<div class="section-label">🏃‍♀️ Interval Run (morning ideal)</div>' : '';
+      runHTML = `${sectionLabel}<div class="run-note">${day.runNote}${target?`<br><strong>This week: ${target}</strong>`:''}`;
+      runHTML += `</div>`;
+    } else if (target) {
+      runHTML = `<div class="run-note"><strong>Target: ${target}</strong></div>`;
+    }
+
+    const wasOpen = openDays[day.id];
+    card.innerHTML = `
+      <div class="day-header" onclick="toggleDay('${day.id}')">
+        <div class="day-dot ${day.dotClass}">${day.day.slice(0,2)}</div>
+        <div class="day-info">
+          <div class="day-name">${day.day}</div>
+          <div class="day-title">${day.title}</div>
+          <div class="day-tags">${tagsHTML}</div>
+        </div>
+        <button class="check-btn${s.done?' done':''}" onclick="event.stopPropagation();toggleDayDone('${day.id}')">${s.done?'✓':''}</button>
+        <span class="expand-icon${wasOpen?' open':''}" id="icon-${day.id}">▼</span>
+      </div>
+      <div class="day-body${wasOpen?' open':''}" id="body-${day.id}">
+        ${runHTML}
+        ${exHTML}
+        <div class="notes-area">
+          <div class="section-label">Notes / Weights / Pace</div>
+          <textarea placeholder="Log weights, how you felt, distance, pace, PBs…" oninput="saveNotes('${day.id}',this.value)">${s.notes||''}</textarea>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  updateStats();
+}
+
+// Show install banner for iOS Safari (not already installed)
+function checkInstallPrompt() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  const dismissed = localStorage.getItem('installDismissed');
+  if (isIOS && !isStandalone && !dismissed) {
+    document.getElementById('installBanner').style.display = 'block';
+  }
+}
+
+function dismissBanner() {
+  localStorage.setItem('installDismissed', '1');
+  document.getElementById('installBanner').style.display = 'none';
+}
+
+// Offline toast
+window.addEventListener('offline', () => {
+  const t = document.getElementById('offlineToast');
+  t.style.display = 'block';
+  setTimeout(() => t.style.display='none', 3000);
+});
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+loadState();
+document.getElementById('weekDisplay').textContent = `Week ${currentWeek}`;
+document.getElementById('progressBar').style.width = `${(currentWeek/8)*100}%`;
+document.getElementById('progressLabel').textContent = `Week ${currentWeek} of 8`;
+checkInstallPrompt();
+renderDays();
+</script>
+</body>
+</html>
